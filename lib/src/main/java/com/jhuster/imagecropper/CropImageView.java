@@ -1,16 +1,16 @@
 /*
- *  COPYRIGHT NOTICE  
+ *  COPYRIGHT NOTICE
  *  Copyright (C) 2015, Jhuster <lujun.hust@gmail.com>
  *  https://github.com/Jhuster/ImageCropper
- *   
- *  @license under the Apache License, Version 2.0 
+ *
+ *  @license under the Apache License, Version 2.0
  *
  *  @file    CropImageView.java
  *  @brief   Draw ImageView and CropWindow
- *  
- *  @version 1.0     
+ *
+ *  @version 1.0
  *  @author  Jhuster
- *  @date    2015/01/09    
+ *  @date    2015/01/09
  */
 package com.jhuster.imagecropper;
 
@@ -22,6 +22,7 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
+import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -35,9 +36,10 @@ import com.jhuster.imagecropper.TouchEventDetector.TouchEventListener;
 
 public class CropImageView extends View implements TouchEventListener {
 
-    private static final float CROP_WINDOW_PAINTER_WIDTH = 3.0f;
+    private static final float CROP_WINDOW_PAINTER_WIDTH = 5.0f;
     private static final float OUTSIDE_WINDOW_PAINTER_WIDTH = 1.0f;
-    private static final float DRAG_ICONS_RADIUS = 10.0f;
+    private static final float CORNER_PATH_WIDTH = 9.0f;
+    private static final float CORNER_PATH_LEN = 50.0f;
 
     private Paint mCropPainter;
     private Paint mOutsidePainter;
@@ -53,10 +55,11 @@ public class CropImageView extends View implements TouchEventListener {
     private float mScaleRate = (float) 1.0;
     private TouchEventDetector mTouchEventDetector = new TouchEventDetector();
 
-    private Drawable[] mDragDrawables = {getResources().getDrawable(R.drawable.ic_crop_drag_x),
-            getResources().getDrawable(R.drawable.ic_crop_drag_y),
-            getResources().getDrawable(R.drawable.ic_crop_drag_x),
-            getResources().getDrawable(R.drawable.ic_crop_drag_y)};
+    private Drawable[] mDragDrawables = {getResources().getDrawable(R.drawable.ic_left_top),
+            getResources().getDrawable(R.drawable.ic_right_top),
+            getResources().getDrawable(R.drawable.ic_left_bottom),
+            getResources().getDrawable(R.drawable.ic_right_bottom)};
+    private Paint mCornerPathPaint;
 
     public CropImageView(Context context) {
         super(context);
@@ -84,13 +87,19 @@ public class CropImageView extends View implements TouchEventListener {
         mCropPainter.setAntiAlias(true);
         mCropPainter.setStyle(Style.STROKE);
         mCropPainter.setStrokeWidth(CROP_WINDOW_PAINTER_WIDTH);
-        mCropPainter.setColor(Color.YELLOW);
+        mCropPainter.setColor(Color.WHITE);
 
         mOutsidePainter = new Paint();
         mOutsidePainter.setAntiAlias(true);
         mOutsidePainter.setStyle(Style.FILL);
-        mOutsidePainter.setARGB(125, 50, 50, 50);
-        mOutsidePainter.setStrokeWidth(OUTSIDE_WINDOW_PAINTER_WIDTH);
+        mOutsidePainter.setARGB(230, 0, 0, 0);
+        mOutsidePainter.setStrokeWidth(CROP_WINDOW_PAINTER_WIDTH);
+
+        mCornerPathPaint = new Paint();
+        mCornerPathPaint.setAntiAlias(true);
+        mCornerPathPaint.setStyle(Style.STROKE);
+        mCornerPathPaint.setColor(Color.WHITE);
+        mCornerPathPaint.setStrokeWidth(CORNER_PATH_WIDTH);
     }
 
     public void initialize(Bitmap bitmap) {
@@ -198,11 +207,33 @@ public class CropImageView extends View implements TouchEventListener {
     }
 
     private void drawDragIcons(Canvas canvas) {
-        Point[] points = mCropWindow.getDragPoints();
-        for (int i = 0; i < points.length; i++) {
-            mDragDrawables[i].setBounds((int) (points[i].x - DRAG_ICONS_RADIUS), (int) (points[i].y - DRAG_ICONS_RADIUS), (int) (points[i].x + DRAG_ICONS_RADIUS), (int) (points[i].y + DRAG_ICONS_RADIUS));
-            mDragDrawables[i].draw(canvas);
-        }
+        Point leftTop = mCropWindow.getCornerPoint(0);
+        Path ltpath = new Path();
+        ltpath.moveTo(leftTop.x, leftTop.y + CORNER_PATH_LEN);
+        ltpath.lineTo(leftTop.x, leftTop.y);
+        ltpath.lineTo(leftTop.x + CORNER_PATH_LEN, leftTop.y);
+        canvas.drawPath(ltpath, mCornerPathPaint);
+
+        Point rightTop = mCropWindow.getCornerPoint(1);
+        Path rtpath = new Path();
+        rtpath.moveTo(rightTop.x - CORNER_PATH_LEN, rightTop.y);
+        rtpath.lineTo(rightTop.x, rightTop.y);
+        rtpath.lineTo(rightTop.x, rightTop.y + CORNER_PATH_LEN);
+        canvas.drawPath(rtpath, mCornerPathPaint);
+
+        Point leftBottom = mCropWindow.getCornerPoint(2);
+        Path lbpath = new Path();
+        lbpath.moveTo(leftBottom.x, leftBottom.y - CORNER_PATH_LEN);
+        lbpath.lineTo(leftBottom.x, leftBottom.y);
+        lbpath.lineTo(leftBottom.x + CORNER_PATH_LEN, leftBottom.y);
+        canvas.drawPath(lbpath, mCornerPathPaint);
+
+        Point rightBottom = mCropWindow.getCornerPoint(3);
+        Path rbpath = new Path();
+        rbpath.moveTo(rightBottom.x - CORNER_PATH_LEN, rightBottom.y);
+        rbpath.lineTo(rightBottom.x, rightBottom.y);
+        rbpath.lineTo(rightBottom.x, rightBottom.y - CORNER_PATH_LEN);
+        canvas.drawPath(rbpath, mCornerPathPaint);
     }
 
     @Override

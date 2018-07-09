@@ -123,13 +123,31 @@ public class CropWindow {
     public Point[] getDragPoints() {
         Point[] points = new Point[4];
         Rect window = getWindowRect();
-        points[0] = new Point(window.left, window.centerY());   //Left
-        points[1] = new Point(window.centerX(), window.top);    //Top
-        points[2] = new Point(window.right, window.centerY());  //Right
-        points[3] = new Point(window.centerX(), window.bottom); //Bottom
+        points[0] = new Point(window.left, window.top);   //left top
+        points[1] = new Point(window.right, window.top);    //right top
+        points[2] = new Point(window.left, window.bottom);  //left bottom
+        points[3] = new Point(window.right, window.bottom); //right bottom
         return points;
     }
 
+    public Point getCornerPoint(int cornor){
+        Rect window = getWindowRect();
+        int x = 0,y = 0;
+        if(cornor==0){
+            x = window.left;
+            y = window.top;
+        }else if(cornor==1){
+            x = window.right;
+            y = window.top;
+        }else if(cornor==2){
+            x = window.left;
+            y = window.bottom;
+        }else if(cornor==3){
+            x = window.right;
+            y = window.bottom;
+        }
+       return new Point(x, y);
+    }
     //By default, the border equals the image border
     private RectF getGrowBorder() {
         RectF border = new RectF(mImageRect);
